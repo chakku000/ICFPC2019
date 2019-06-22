@@ -13,4 +13,7 @@ node checker.js --help
 node checker.js -n XXX -f prob-XXX.sol
 # All Test (***/prob-XXX.sol)
 node checker.js --all -d target_dir
+
+# ビジュアライザ (resultimageに出力)
+node visualizer.js 
 ```
