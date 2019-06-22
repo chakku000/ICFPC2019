@@ -10,6 +10,13 @@ filename = argv[1]
 data = open(filename, 'r').read()
 
 MP, B, X, Y, sx, sy = desc_parser.parse(data)
+for i in range(1, Y-1):
+    for j in range(1, X):
+        if MP[i][j-1] != 1 and MP[i][j] != 1 and MP[i][j+1] == 1:
+            if (MP[i-1][j-1] == 1 and MP[i-1][j] != 1) or (MP[i+1][j-1] == 1 and MP[i+1][j] != 1):
+                continue
+            MP[i][j] = 1
+
 cnt = 0
 for i in range(Y):
     for j in range(X):
@@ -59,7 +66,7 @@ def move(sx, sy, tx, ty):
         for i, dx, dy in dd:
             nx = x + dx; ny = y + dy
             key = (nx, ny)
-            if not 0 <= nx < X or not 0 <= ny < Y or key in prv or MP[ny][nx]:
+            if not 0 <= nx < X or not 0 <= ny < Y or key in prv or MP[ny][nx] == 1:
                 continue
             prv[key] = pkey
             que.append(key)
