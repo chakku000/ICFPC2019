@@ -133,6 +133,9 @@ void fill_wall(vector<vector<char>>& table,vector<pii>& maps){
 
 }
 
+void fill_obstacle(vector<vector<char>>& table,vector<pii>& maps){
+}
+
 
 int main(int argc,char** argv){
     if(argc < 2){
@@ -178,41 +181,6 @@ int main(int argc,char** argv){
     auto start = read_point(input,cur);
 
     cout << "start " << start.first << " " << start.second << endl;
-
-
-
-
-    /* queue<pii> que; */
-    /* vector<vector<bool>> visited(max_x,vector<bool>(max_y,false)); */
-    /* visited[start.first][start.second] = true; */
-    /* que.push(start); */
-    /* while(!que.empty()){ */
-    /*     int x = que.front().first; */
-    /*     int y = que.front().second; */
-    /*     que.pop(); */
-
-    /*     for(int i=0;i<4;i++){ */
-    /*         int nx = x + dx[i]; */
-    /*         int ny = y + dy[i]; */
-    /*         if(nx < 0 or ny < 0 or nx >= max_x or ny >= max_y) continue; */
-    /*         if(visited[nx][ny]) continue; */
-    /*         if(table[nx][ny] == '#') continue; */
-
-    /*         visited[nx][ny] = true; */
-    /*         que.push(pii(nx,ny)); */
-    /*     } */
-    /* } */
-
-    /* for(int i=0;i<max_x;i++){ */
-    /*     for(int j=0;j<max_y;j++){ */
-    /*         if(visited[i][j]){ */
-    /*             table[i][j] = '.'; */
-    /*         } */
-    /*     } */
-    /* } */
-
-
-
 
     vector<vector<pii>> obstacles = read_obstacles(input,cur);
     cout << obstacles << endl;
