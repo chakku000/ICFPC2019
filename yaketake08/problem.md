@@ -144,7 +144,7 @@ boosterの種類はcodeで示される。
 
 *prob-NNN.desc* のsolutionは *prob-NNN.sol* で記述する。
 単一行の行動系列を記述し、以下のコマンドを記述する。
-- `W` ←
+- `W` ↑
 - `S` ↓
 - `A` ←
 - `D` →
