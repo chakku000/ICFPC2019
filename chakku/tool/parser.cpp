@@ -36,7 +36,6 @@ const int dx[]={1,0,-1,0} ,dy[] = {0,1,0,-1};
 using pii = pair<int,int>;
 
 
-
 pii read_point(const string& s,int& cur){
     assert(s[cur] == '(');
     cur++;
@@ -87,6 +86,23 @@ vector<vector<pii>> read_obstacles(const string& s,int& cur){
     return res;
 }
 
+vector<pair<char,pii>> read_booster(const string& s, int& cur){
+    assert(s[cur] == '#');
+    cur++;
+    vector<pair<char,pii>> res;
+    while(cur < (int)s.size()){
+        char c = s[cur];
+        /* cout << c << endl; */
+        cur++;
+        pii p = read_point(s,cur);
+        res.push_back(make_pair(c,p));
+        if(cur < (int)s.size()){
+            cur++;
+        }
+    }
+    return res;
+}
+
 void fill_wall(vector<vector<char>>& table,vector<pii>& maps){
     int max_x = table.size();
     int max_y = table[0].size();
@@ -117,7 +133,6 @@ void fill_wall(vector<vector<char>>& table,vector<pii>& maps){
             /* cout << "P2" << endl; */
             if(sy < gy){
                 for(int y=sy;y<gy;y++){
-                    cout << sx << " " << y << endl;
                     if(sx<max_x and y<max_y) table[sx][y] = '#';
                 }
             }else{
@@ -130,10 +145,46 @@ void fill_wall(vector<vector<char>>& table,vector<pii>& maps){
             }
         }
     }
-
 }
 
 void fill_obstacle(vector<vector<char>>& table,vector<pii>& maps){
+    int max_x = table.size();
+    int max_y = table[0].size();
+    for(int i=0;i<(int)maps.size();i++){
+        int j = (i+1)%maps.size();
+        int sx,sy,gx,gy;
+        tie(sx,sy) = maps[i];
+        tie(gx,gy) = maps[j];
+        if(sy == gy){
+            /* cout << "P1" << endl; */
+            if(sx < gx){
+                if(sy<max_y){
+                    for(int x = sx; x<gx; x++){
+                        /* cout << x << " " << sy-1 << endl; */
+                        if(x<max_x) table[x][sy] = '#';
+                    }
+                }
+            }else{
+                if(sy-1>=0){
+                    for(int x=sx-1;x>=gx;x--){
+                        /* cout << x <<" " << sy << endl; */
+                        if(x<max_x and sy-1<max_y) table[x][sy-1] = '#';
+                    }
+                }
+            }
+        }else{
+            if(sy < gy and sx-1>=0){
+                for(int y=sy;y<gy;y++){
+                    if(sx-1>=0 and sx-1<max_x and y<max_y) table[sx-1][y] = '#';
+                }
+            }else{
+                for(int y=sy-1; y>=gy; y--){
+                    /* cout << sx-1 << " " << y << endl; */
+                    if(sx<max_x and y<max_y) table[sx][y] = '#';
+                }
+            }
+        }
+    }
 }
 
 
@@ -183,10 +234,9 @@ int main(int argc,char** argv){
     cout << "start " << start.first << " " << start.second << endl;
 
     vector<vector<pii>> obstacles = read_obstacles(input,cur);
-    cout << obstacles << endl;
     for(auto& ps : obstacles){
         /* cout << ps << endl; */
-        fill_wall(table,ps);
+        fill_obstacle(table,ps);
     }
 
 
@@ -219,7 +269,22 @@ int main(int argc,char** argv){
         }
     }
 
-    return 0;
+
+    auto boosters = read_booster(input,cur);
+    for(auto& booster : boosters){
+        int x = booster.second.first;
+        int y = booster.second.second;
+        table[x][y] = booster.first;
+    }
+
+    for(int i=0;i<max_x;i++){
+        for(int j=0;j<max_y;j++){
+            if(table[i][j] == '?') table[i][j] = '#';
+        }
+    }
+
+    table[start.first][start.second] = 'S';
+
     for(int y=max_y-1;y>=0;y--){
         for(int x=0;x<max_x;x++){
             cout << table[x][y];
