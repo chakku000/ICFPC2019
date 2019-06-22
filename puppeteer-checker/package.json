@@ -1,0 +1,16 @@
+{
+  "name": "puppeteer-checker",
+  "version": "1.0.0",
+  "description": "```\r npm install\r ```",
+  "main": "checker.js",
+  "dependencies": {
+    "commander": "^2.20.0",
+    "puppeteer": "^1.18.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
