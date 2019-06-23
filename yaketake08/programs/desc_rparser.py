@@ -1,4 +1,9 @@
 from collections import defaultdict, deque
+# MP: (X+1)*(Y+1) のMap (x = X+1, y = Y+1 は壁 '1' にすること)
+# B: アイテムのtuple(code, x, y) のlist
+# X: 盤面xサイズ
+# Y: 盤面yサイズ
+# sx, sy: 最初のworker-wrapperの配置
 def rparse(MP, B, X, Y, sx, sy):
     Q = []
     R = []
@@ -51,6 +56,13 @@ def rparse(MP, B, X, Y, sx, sy):
     Q.append("({},{})".format(sx, sy))
     Q.append("##")
 
+    # code に対応する item
+    # 0: 'B': extension of manipulator
+    # 1: 'F': fast wheels
+    # 2: 'L': drill
+    # 3: 'X': (clone point)
+    # 4: 'R': teleport
+    # 5: 'C': cloning
     CODE = "BFLXRC"
     R = []
     for code, x, y in B:

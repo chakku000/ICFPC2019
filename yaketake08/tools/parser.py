@@ -5,7 +5,7 @@ argv = sys.argv
 argc = len(argv)
 filename = argv[1]
 
-data = open(filename, 'r').read()
+data = open(filename, 'r').read().strip()
 components = data.split('#')
 
 INF = 10**9

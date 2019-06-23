@@ -6,7 +6,7 @@ argv = sys.argv
 argc = len(argv)
 filename = argv[1]
 
-data = open(filename, 'r').read()
+data = open(filename, 'r').read().strip()
 
 MP, B, X, Y, sx, sy = desc_parser.parse(data)
 cnt = 0
