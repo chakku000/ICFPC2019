@@ -12,7 +12,7 @@ for input_file in `find $inputs/*.desc`; do
     echo "skip"
     continue
   fi
-  python3 ./programs/shortcut-cloning-dfs.py ${input_file} > ${output_file}
+  python3 ./programs/shortcut-simple-dfs.py ${input_file} > ${output_file}
   if [ $? != 0 ]; then
     # delete file if fails to execute the program
     echo "deleted"

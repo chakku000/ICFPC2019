@@ -11,18 +11,22 @@ filename = argv[1]
 data = open(filename, 'r').read()
 
 MP, B, X, Y, sx, sy = desc_parser.parse(data)
+MP1 = [e[:] for e in MP]
 for i in range(1, Y-1):
     for j in range(1, X):
         if MP[i][j-1] != 1 and MP[i][j] != 1 and MP[i][j+1] == 1:
             if (MP[i-1][j-1] == 1 and MP[i-1][j] != 1) or (MP[i+1][j-1] == 1 and MP[i+1][j] != 1):
                 continue
-            MP[i][j] = 1
+            MP1[i][j] = 1
 
 cnt = 0
+W = [[0]*(X+1) for i in range(Y+1)]
 for i in range(Y):
     for j in range(X):
-        if MP[i][j] != 1:
+        if MP1[i][j] != 1:
             cnt += 1
+        if MP[i][j] == 1:
+            W[i][j] = 1
 
 dd = ((0, -1, 0), (1, 0, -1), (2, 1, 0), (3, 0, 1))
 C = "ASDW"
@@ -35,7 +39,7 @@ def dfs0(x, y):
     R = []
     for i, dx, dy in dd:
         nx = x + dx; ny = y + dy
-        if not 0 <= nx < X or not 0 <= ny < Y or used[ny][nx] or MP[ny][nx] == 1:
+        if not 0 <= nx < X or not 0 <= ny < Y or used[ny][nx] or MP1[ny][nx] == 1:
             continue
         sz = dfs0(nx, ny)
         R.append((i, sz))
@@ -46,7 +50,11 @@ def dfs0(x, y):
     return r
 def dfs(x, y):
     global cnt
-    res.append((x, y, 1))
+    if W[y][x] == 0 or W[y][x+1] == 0 or W[y-1][x+1] == 0 or W[y+1][x+1] == 0:
+        res.append((x, y, 1))
+    else:
+        res.append((x, y, 0))
+    W[y][x] = W[y][x+1] = W[y-1][x+1] = W[y+1][x+1] = 1
     cnt -= 1
     for i in orders[y][x]:
         _, dx, dy = dd[i]
