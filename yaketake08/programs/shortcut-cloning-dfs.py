@@ -22,6 +22,11 @@ CP = [[0]*(X+1) for i in range(Y+1)]
 XV = []
 ci = 0
 xi = 0
+W = [[0]*(X+1) for i in range(Y+1)]
+for i in range(Y+1):
+    for j in range(X+1):
+        if MP[i][j] == 1:
+            W[i][j] = 1
 #print(B)
 for code, x, y in B:
     ITEM[y][x] = code
@@ -34,33 +39,12 @@ for code, x, y in B:
         XV.append((x, y))
 #print(ci)
 
-def distance_between_poss(VS):
-    DM = {}
-    for cx, cy in VS:
-        que = deque([(cx, cy)])
-        dist = [[-1]*(X+1) for i in range(Y+1)]
-        dist[cy][cx] = 0
-        while que:
-            x, y = que.popleft()
-            d = dist[y][x] + 1
-            for i, dx, dy in dd:
-                nx = x + dx; ny = y + dy
-                if not 0 <= nx < X or not 0 <= ny < Y or MP[ny][nx] == 1 or dist[ny][nx] != -1:
-                    continue
-                dist[ny][nx] = d
-                que.append((nx, ny))
-        D = {}
-        for x, y in VS:
-            D[x, y] = dist[y][x]
-        DM[cx, cy] = D
-    return DM
-
 VS = [(sx, sy)]
 for i, x, y in CV:
     VS.append((x, y))
 for x, y in XV:
     VS.append((x, y))
-DM = distance_between_poss(VS)
+DM = util.distance_between_poss(VS, MP, X, Y)
 
 ALL = 2**ci-1
 memo = {}
@@ -103,6 +87,8 @@ for x, y in ms:
     ps = util.move(MP, X, Y, px, py, x, y)
     R.extend(ps)
     px = x; py = y
+for x, y in R:
+    W[y][x] = W[y][x+1] = W[y-1][x+1] = W[y+1][x+1] = 1
 r = util.pos_to_command(R)
 #print(*r, sep='')
 
@@ -203,7 +189,11 @@ for i in range(ci+1):
         return r
     def dfs(x, y):
         global cnt
-        res.append((x, y, 1))
+        if W[y][x] == 0 or W[y][x+1] == 0 or W[y-1][x+1] == 0 or W[y+1][x+1] == 0:
+            res.append((x, y, 1))
+        else:
+            res.append((x, y, 0))
+        W[y][x] = W[y][x+1] = W[y-1][x+1] = W[y+1][x+1] = 1
         cnt -= 1
         for i in orders[y][x]:
             _, dx, dy = dd[i]
@@ -228,8 +218,7 @@ for i in range(ci+1):
             cx = x; cy = y
         else:
             md = 0
-    util.pos_to_command(res0)
-    Q[i].extend(res0[1:])
+    Q[i].extend(res0)
     rs[i] = util.pos_to_command(Q[i])
 
 max_len = max(len(rs[i]) + OFFSET[i] for i in range(ci+1))

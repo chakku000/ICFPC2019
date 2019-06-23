@@ -31,6 +31,30 @@ def pos_to_command(R):
     res = []
     for (x0, y0), (x1, y1) in zip(R, R[1:]):
         dx = x1 - x0; dy = y1 - y0
+        if dx == dy == 0:
+            continue
         assert (dx, dy) in M, ((x0, y0), (x1, y1), dx, dy)
         res.append(M[dx, dy])
     return res
+
+def distance_between_poss(VS, MP, X, Y):
+    DM = {}
+    for cx, cy in VS:
+        que = deque([(cx, cy)])
+        dist = [[-1]*(X+1) for i in range(Y+1)]
+        dist[cy][cx] = 0
+        while que:
+            x, y = que.popleft()
+            d = dist[y][x] + 1
+            for i, dx, dy in dd:
+                nx = x + dx; ny = y + dy
+                if not 0 <= nx < X or not 0 <= ny < Y or MP[ny][nx] == 1 or dist[ny][nx] != -1:
+                    continue
+                dist[ny][nx] = d
+                que.append((nx, ny))
+        D = {}
+        for x, y in VS:
+            D[x, y] = dist[y][x]
+        DM[cx, cy] = D
+    return DM
+
