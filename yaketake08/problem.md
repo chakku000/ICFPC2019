@@ -233,5 +233,76 @@ First update
 
 Second update
 
+- https://icfpcontest2019.github.io/download/clones-v1.pdf
+
 ----
 Third update
+
+- https://icfpcontest2019.github.io/download/lambdachain-v1.pdf
+
+## 1 Proof-of-Wrap in Nutshell
+
+### 1.1 Block puzzles
+
+> puzzle := bNum,eNum,tSize,vMin,vMax,mNum,fNum,dNum,rNum,cNum,xNum#iSqs#oSqs  
+> iSqs,oSqs := repSep(point,",")
+
+- bNum: 大量のcurrent block (positive integer)
+- eNum: epoch number パズルの難しさを決定する (４つのブロックごとにepoch numberは増加する)
+- tSize ~ xNum: 非負の整数
+- iSqs, oSqs はsquare coordinatesのカンマ区切りのリスト
+
+block puzzleを解く目的のためのtaskは次の制約をみたす必要がある
+
+- map `M` を定義する必要がある
+  - 非負整数による単純なrectilinear polygon
+  - without self-intersection
+  - no zero-length edges
+  - no adjacement collinear triples of vertices
+  - main contestと同じように"polygon-on-the-left" encodingに従う必要がある
+- puzzle-solving taskは障害物を持たない (main contestとは異なる)
+- worker-wrapperの初期位置はmap $M$ の中
+- map `M` は `tSize` 以下のサイズに収める必要がある
+  - the task is not too large
+- `M` の maximal x/y-dimensionsの一方は `tSize - floor(0.1 × tSize)` 以上である必要がある
+  - the task is not too small
+- `M` の領域は 少なくとも `ceil(0.2 × tSize^2)` 以上にする必要がある
+  - the task is not too sparse
+- polygon `M` は `vMin` 以上、`vMax` 以下の頂点数にする必要がある
+  - the task is not too boring and not too hairy
+- taskはpuzzleによって指示されたboosterの数を正確に含む必要がある
+  - `mNum`: manipulator extensionsの数
+  - `fNum`: fast wheelsの数
+  - `dNum`: drillの数
+  - `rNum`: teleportの数
+  - `cNum`: cloning boosterの数
+  - `xNum`: sparn pointsの数
+- `M` は `iSqs` に含まれた全てのsquareを含む必要がある
+- `M` は `oSqs` に含まれた全てのsquareを含まないようにする必要がある
+
+block puzzleの例: https://icfpcontest2019.github.io/download/chain-puzzle-examples.zip
+
+js checker: https://icfpcontest2019.github.io/puzzle_checker/
+
+### 1.2 Lambda-chain submission rules
+
+## 2. The Lambda-chain Protocol
+
+### 2.1 Lambda-chain client
+
+- https://icfpcontest2019.github.io/download/lambda-client.zip
+
+```sh
+$ ./lambda-cli.py --help
+$ ./lambda-cli.py <subcommand> --help
+```
+
+### 2.2 Testing phase
+
+### 2.3 Block format
+
+### 2.4 Mining
+
+- miningは June 22, 2019, 23:00 JST に開始
+- June 24, 2019, 16:00 JST に終了
+  - コンテスト終了3時間前に該当
