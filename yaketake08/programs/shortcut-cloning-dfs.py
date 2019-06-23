@@ -8,9 +8,17 @@ random.seed()
 
 argv = sys.argv
 argc = len(argv)
-filename = argv[1]
 
-data = open(filename, 'r').read()
+# ファイル: prob-XXX.desc
+filename = argv[1]
+data = open(filename, 'r').read().strip()
+
+# ファイル: prob-XXX.buy
+buy_item = ""
+if len(argv) >= 3:
+    buyfile = argv[2]
+    buy_item = open(buyfile, 'r').read().strip()
+
 
 dd = ((0, -1, 0), (1, 0, -1), (2, 1, 0), (3, 0, 1))
 C = "ASDW"
@@ -91,6 +99,11 @@ for x, y in R:
     W[y][x] = W[y][x+1] = W[y-1][x+1] = W[y+1][x+1] = 1
 r = util.pos_to_command(R)
 #print(*r, sep='')
+
+# cloning item from prob-XXX.buy
+for code in buy_item:
+    if code == 'C':
+        ci += 1
 
 # cloning
 for i in range(ci):
