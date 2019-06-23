@@ -1,1 +1,6 @@
 __pycache__
+*.desc
+*.sol
+*.txt
+*.cond
+*.zip

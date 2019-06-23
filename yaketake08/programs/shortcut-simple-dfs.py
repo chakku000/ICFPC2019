@@ -1,6 +1,7 @@
 import desc_parser
 import sys
 from collections import deque
+import util
 sys.setrecursionlimit(10**6)
 
 argv = sys.argv
@@ -56,27 +57,6 @@ def dfs(x, y):
 dfs0(sx, sy)
 dfs(sx, sy)
 #print(*res, sep='')
-def move(sx, sy, tx, ty):
-    que = deque([(sx, sy)])
-    prv = {(sx, sy): (-1, -1)}
-    while que:
-        x, y = pkey = que.popleft()
-        if x == tx and y == ty:
-            break
-        for i, dx, dy in dd:
-            nx = x + dx; ny = y + dy
-            key = (nx, ny)
-            if not 0 <= nx < X or not 0 <= ny < Y or key in prv or MP[ny][nx] == 1:
-                continue
-            prv[key] = pkey
-            que.append(key)
-    ps = []
-    x = tx; y = ty
-    while x != sx or y != sy:
-        ps.append((x, y))
-        x, y = key = prv[x, y]
-    ps.reverse()
-    return ps
 prv = None
 R = []
 px = py = -1
@@ -84,7 +64,7 @@ md = 1
 for x, y, m in res:
     if m:
         if not md:
-            ps = move(px, py, x, y)
+            ps = util.move(MP, X, Y, px, py, x, y)
             R.extend(ps)
             md = 1
         else:
@@ -93,9 +73,5 @@ for x, y, m in res:
     else:
         md = 0
 #print(R)
-ans = []
-M = {(-1, 0): "A", (0, -1): "S", (1, 0): "D", (0, 1): "W"}
-for (x0, y0), (x1, y1) in zip(R, R[1:]):
-    dx = x1 - x0; dy = y1 - y0
-    ans.append(M[dx, dy])
+ans = util.pos_to_command(R)
 print(*ans, sep='')

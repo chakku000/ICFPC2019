@@ -69,12 +69,12 @@ def parse(data):
                     MPi[j] = 1
 
     # ===== a (possibly empty) list of boosters and their locations separated by semicolons
-    # 2: 'B': extension of manipulator
-    # 3: 'F': fast wheels
-    # 4: 'L': drill
-    # 5: 'X': (clone point)
-    # 6: 'R': teleport
-    # 7: 'C': cloning
+    # 0: 'B': extension of manipulator
+    # 1: 'F': fast wheels
+    # 2: 'L': drill
+    # 3: 'X': (clone point)
+    # 4: 'R': teleport
+    # 5: 'C': cloning
     CODE = "BFLXRC"
     boosters = components[3].split(';')
     B = []
