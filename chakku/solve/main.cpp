@@ -19,8 +19,8 @@ int w,h;
 int sx,sy;
 vector<vector<char>> table;
 
-constexpr int BEAM = 10;
-constexpr int DEPTH = 50;
+constexpr int BEAM = 8;
+constexpr int DEPTH = 30;
 
 char direction(const pii& p1,const pii& p2){
     for(int i=0;i<4;i++){
@@ -28,8 +28,12 @@ char direction(const pii& p1,const pii& p2){
             return word[i];
         }
     }
-    assert(false);
+    //assert(false);
+    cout << p1 << " " << p2 << endl;
+    //exit(0);
+    return 'X';
 }
+
 
 struct Action{
     char action;
@@ -76,8 +80,9 @@ bool valid_index(int x,int y){ return !(x<0 or y<0 or x>=w or y>=h); }
 
 void update_move(State& state, int dx,int dy){/*{{{*/
     if(table[state.x+dx][state.y+dy] == '#'){
+        print(state);
+        cerr << dx << " " << dy << endl;
         cerr << "Invalid Move" << endl;
-        cerr << state.x << " " << state.y <<" " << dx << " " << dy << " " << table[state.x+dx] << endl;
         exit(0);
     }
     if(valid_index(state.x+dx,state.y+dy) and table[state.x+dx][state.y+dy]=='#'){
@@ -133,15 +138,40 @@ void update_move(State& state, int dx,int dy){/*{{{*/
 vector<vector<P>> dist;
 void dfs(int x,int y,int px,int py,int d){
     if(dist[x][y].first!=INF) return;
-    dist[x][y] = P(d+1,pii(px,py));
+    if(table[x][y] == '#') return;
+    dist[x][y] = P(d,pii(px,py));
 
     rep(i,4){
         int nx = x + dx[i];
         int ny = y + dy[i];
         if(!valid_index(nx,ny)) continue;
-        if(table[nx][ny] == '#') continue;
         dfs(nx,ny,x,y,d+1);
     }
+}
+
+vector<vector<P>> bfs(int x,int y){
+    vector<vector<P>> dist(w,vector<P>(h,P(INF,pii(-1,-1))));
+    queue<P> que;
+    que.push(P(0,pii(x,y)));
+    dist[x][y] = P(0,pii(x,y));
+    while(!que.empty()){
+        int d = que.front().first;
+        int x = que.front().second.first;
+        int y = que.front().second.second;
+        que.pop();
+
+        rep(i,4){
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            if(!valid_index(nx,ny)) continue;
+            if(table[nx][ny] == '#') continue;
+            if(dist[nx][ny].first != INF) continue;
+
+            dist[nx][ny] = P(d+1,pii(x,y));
+            que.push(P(d+1,pii(nx,ny)));
+        }
+    }
+    return dist;
 }
 
 void traverse(State& now){
@@ -204,7 +234,7 @@ int main(){
 
     int turn = 0;
     // あんまりturn数を多くしても無駄が生じるのでパラメータを上手く定める関数が必要
-    while(++turn < h*w*10){
+    while(++turn < h*w*2){
         /* cerr << endl; */
         /* cerr << "turn = " << turn << endl; */
         /* cerr << table[now.x][now.y] << endl; */
@@ -296,68 +326,63 @@ int main(){
     }
 
 
-    cerr << "\nFinish Beam" << endl;
-    return 0;
+    /* cerr << "\nFinish Beam" << endl; */
 
-    // 残りはDFSで探索しきる
-    dist = vector<vector<P>>(w,vector<P>(w,P(INF,pii(-1,-1))));
-    dfs(now.x,now.y,now.x,now.y,0);
-
-    // 未到達な場所へのリスト
-    set<P> unreached;
-    rep(i,w){
-        rep(j,h){
-            if(table[i][j]!='#' and !now.visit[i][j]){
-                unreached.insert(dist[i][j]);
+    while(now.wheelturn>0){
+        for(int j=0;j<4;j++){
+            int nx1 = now.x + dx[j];
+            int ny1 = now.y + dy[j];
+            if(!valid_index(nx1,ny1)){
+                continue;
             }
+            if(table[nx1][ny1] == '#'){
+                continue;
+            }
+
+            update_move(now,dx[j],dy[j]);
+            cout << word[j];
+            break;
         }
     }
 
-    // setから要素を削除しながらloop回していいか不明
-
-    while(!unreached.empty()){
-        P elm = *unreached.begin();
-        pii p = elm.second;
-
-        while(!now.visit[p.first][p.second]){
-            p = dist[p.first][p.second].second;
-        }
-
-        // pは既に到達しているが未到達領域と接している部分
-        // pまで進めば良い
-        // p -> nowまで遡る
-        auto pp(p);
-        vector<Action> va;
-        while(pp.first != now.x || pp.second != now.y){
-            pii pre = dist[pp.first][pp.second].second;
-            va.emplace_back(direction(pre,pp));
-            pp = pre;
-        }
-        for(Action& a : va){
-            cout << a.action;
-            if(a.action == 'W') update_move(now,0,1);
-            if(a.action == 'S') update_move(now,0,-1);
-            if(a.action == 'A') update_move(now,-1,0);
-            if(a.action == 'D') update_move(now,1,0);
-        }
-
-        cout << direction(p,elm.second);
-        update_move(now,elm.second.first-p.first,elm.second.second-p.second);
-        p = elm.second;
-        // now is p
-
-        traverse(now);
-        // unreachを再計算する
-
-        dist = vector<vector<P>>(w,vector<P>(w,P(INF,pii(-1,-1))));
-        dfs(now.x,now.y,now.x,now.y,0);
-
-        rep(i,w){
-            rep(j,h){
-                if(table[i][j]!='#' and !now.visit[i][j]){
-                    unreached.insert(dist[i][j]);
-                }
+    // 残りはBFSで探索しきる
+    while(1){
+        auto dist = bfs(now.x,now.y);
+        int to = INF;
+        pii p(-1,-1);
+        rep(i,w) rep(j,h){
+            if(dist[i][j].first < to and !now.visit[i][j]){
+                to = dist[i][j].first;
+                p = pii(i,j);
             }
         }
+
+        /* cerr << "from " << endl; */
+        /* print(now); */
+
+        /* cerr << "to " << endl; */
+        /* cerr << p << endl; */
+
+        vector<char> vc;
+        if(p.first == -1 and p.second == -1) return 0;
+        while(p != dist[p.first][p.second].second){
+            pii pa = dist[p.first][p.second].second;
+            if(p == pa) break;
+            vc.push_back(direction(pa,p));
+            p = pa;
+            assert( p != pii(-1,-1));
+        }
+
+        /* cout << endl << "----" << endl; */
+        for(int i=vc.size()-1;i>=0;i--){
+            cout << vc[i];
+            if(vc[i] == 'D') update_move(now,1,0);
+            if(vc[i] == 'W') update_move(now,0,1);
+            if(vc[i] == 'A') update_move(now,-1,0);
+            if(vc[i] == 'S') update_move(now,0,-1);
+        }
+        /* cout << endl << "----" << endl; */
+        /* cerr << "result "; */
+        /* print(now); */
     }
 }
