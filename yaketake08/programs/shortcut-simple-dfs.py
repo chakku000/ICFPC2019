@@ -1,6 +1,7 @@
 import desc_parser
 import sys
 from collections import deque
+import util
 sys.setrecursionlimit(10**6)
 
 argv = sys.argv
@@ -10,18 +11,22 @@ filename = argv[1]
 data = open(filename, 'r').read()
 
 MP, B, X, Y, sx, sy = desc_parser.parse(data)
+MP1 = [e[:] for e in MP]
 for i in range(1, Y-1):
     for j in range(1, X):
         if MP[i][j-1] != 1 and MP[i][j] != 1 and MP[i][j+1] == 1:
             if (MP[i-1][j-1] == 1 and MP[i-1][j] != 1) or (MP[i+1][j-1] == 1 and MP[i+1][j] != 1):
                 continue
-            MP[i][j] = 1
+            MP1[i][j] = 1
 
 cnt = 0
+W = [[0]*(X+1) for i in range(Y+1)]
 for i in range(Y):
     for j in range(X):
-        if MP[i][j] != 1:
+        if MP1[i][j] != 1:
             cnt += 1
+        if MP[i][j] == 1:
+            W[i][j] = 1
 
 dd = ((0, -1, 0), (1, 0, -1), (2, 1, 0), (3, 0, 1))
 C = "ASDW"
@@ -34,7 +39,7 @@ def dfs0(x, y):
     R = []
     for i, dx, dy in dd:
         nx = x + dx; ny = y + dy
-        if not 0 <= nx < X or not 0 <= ny < Y or used[ny][nx] or MP[ny][nx] == 1:
+        if not 0 <= nx < X or not 0 <= ny < Y or used[ny][nx] or MP1[ny][nx] == 1:
             continue
         sz = dfs0(nx, ny)
         R.append((i, sz))
@@ -45,7 +50,11 @@ def dfs0(x, y):
     return r
 def dfs(x, y):
     global cnt
-    res.append((x, y, 1))
+    if W[y][x] == 0 or W[y][x+1] == 0 or W[y-1][x+1] == 0 or W[y+1][x+1] == 0:
+        res.append((x, y, 1))
+    else:
+        res.append((x, y, 0))
+    W[y][x] = W[y][x+1] = W[y-1][x+1] = W[y+1][x+1] = 1
     cnt -= 1
     for i in orders[y][x]:
         _, dx, dy = dd[i]
@@ -56,27 +65,6 @@ def dfs(x, y):
 dfs0(sx, sy)
 dfs(sx, sy)
 #print(*res, sep='')
-def move(sx, sy, tx, ty):
-    que = deque([(sx, sy)])
-    prv = {(sx, sy): (-1, -1)}
-    while que:
-        x, y = pkey = que.popleft()
-        if x == tx and y == ty:
-            break
-        for i, dx, dy in dd:
-            nx = x + dx; ny = y + dy
-            key = (nx, ny)
-            if not 0 <= nx < X or not 0 <= ny < Y or key in prv or MP[ny][nx] == 1:
-                continue
-            prv[key] = pkey
-            que.append(key)
-    ps = []
-    x = tx; y = ty
-    while x != sx or y != sy:
-        ps.append((x, y))
-        x, y = key = prv[x, y]
-    ps.reverse()
-    return ps
 prv = None
 R = []
 px = py = -1
@@ -84,7 +72,7 @@ md = 1
 for x, y, m in res:
     if m:
         if not md:
-            ps = move(px, py, x, y)
+            ps = util.move(MP, X, Y, px, py, x, y)
             R.extend(ps)
             md = 1
         else:
@@ -93,9 +81,5 @@ for x, y, m in res:
     else:
         md = 0
 #print(R)
-ans = []
-M = {(-1, 0): "A", (0, -1): "S", (1, 0): "D", (0, 1): "W"}
-for (x0, y0), (x1, y1) in zip(R, R[1:]):
-    dx = x1 - x0; dy = y1 - y0
-    ans.append(M[dx, dy])
+ans = util.pos_to_command(R)
 print(*ans, sep='')
