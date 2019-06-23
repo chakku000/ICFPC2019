@@ -17,11 +17,10 @@ using P = pair<int,pii>;
 int offset_x,offset_y;
 int w,h;
 int sx,sy;
-vector<string> table;
+vector<vector<char>> table;
 
-
-constexpr int BEAM = 5;
-constexpr int DEPTH = 100;
+constexpr int BEAM = 10;
+constexpr int DEPTH = 50;
 
 char direction(const pii& p1,const pii& p2){
     for(int i=0;i<4;i++){
@@ -38,8 +37,12 @@ struct Action{
     Action(char c): action(c){}
     Action(char c,int xx,int yy) : action(c) , x(xx) , y(yy){}
 };
+ostream& operator<<(ostream& os, const Action& action){
+    os << "Action(" << action.action<< ")";
+    return os;
+}
 
-struct State{
+struct State{/*{{{*/
 public:
     int x,y;
     int value;
@@ -52,19 +55,35 @@ public:
     vector<pii> arms;
     vector<Action> actions;
 
-    bool operator<(const State& st)const{ return value < st.value; }
+    int eval()const{
+        return value + actions.size();
+    }
+
+    bool operator<(const State& st)const{
+        return eval() < st.eval();
+    }
     void init(){
         visit.assign(w,vector<bool>(h,false));
     }
-};
+};/*}}}*/
+
+void print(State& s){
+    cerr << "(" << s.x << "," << s.y << ") , " << "value = " << s.value << " actions = " << s.actions << endl;
+}
 
 bool valid_index(int x,int y){ return !(x<0 or y<0 or x>=w or y>=h); }
 
 
-void update_move(State& state, int dx,int dy){
-    if(valid_index(state.x+dx,state.y+dy) and table[state.x+dx][state.y+dy]!='#') return;
+void update_move(State& state, int dx,int dy){/*{{{*/
+    if(table[state.x+dx][state.y+dy] == '#'){
+        cerr << "Invalid Move" << endl;
+        cerr << state.x << " " << state.y <<" " << dx << " " << dy << " " << table[state.x+dx] << endl;
+        exit(0);
+    }
+    if(valid_index(state.x+dx,state.y+dy) and table[state.x+dx][state.y+dy]=='#'){
+        return;
+    }
 
-    cerr << "OK" << endl;
 
     state.x += dx;
     state.y += dy;
@@ -75,7 +94,7 @@ void update_move(State& state, int dx,int dy){
     if(!state.visit[state.x][state.y]) cnt++;
     if(table[state.x][state.y] == 'B') state.arm++;
     if(table[state.x][state.y] == 'F') state.wheel++;
-    /* if(table[state.x][state.y] == 'L') state.drill++; */
+    state.visit[state.x][state.y] = true;
 
     // 手が届く範囲
     for(const auto& p : state.arms){
@@ -87,7 +106,7 @@ void update_move(State& state, int dx,int dy){
     }
 
     // 倍速移動中
-    if(state.wheel>0 ){
+    if(state.wheelturn>0){
         if(valid_index(state.x+dx,state.y+dy) and table[state.x+dx][state.y+dy]!='#'){
             state.x += dx;
             state.y += dy;
@@ -95,7 +114,7 @@ void update_move(State& state, int dx,int dy){
             if(!state.visit[state.x][state.y]) cnt++;
             if(table[state.x][state.y] == 'B') state.arm++;
             if(table[state.x][state.y] == 'F') state.wheel++;
-            /* if(table[state.x][state.y] == 'L') state.drill++; */
+            state.visit[state.x][state.y] = true;
 
             // 手が届く範囲
             for(const auto& p : state.arms){
@@ -106,12 +125,10 @@ void update_move(State& state, int dx,int dy){
                 state.visit[x][y] = true;
             }
         }
-        state.wheel--;
+        state.wheelturn--;
     }
-
     state.value -= cnt;
-}
-
+}/*}}}*/
 
 vector<vector<P>> dist;
 void dfs(int x,int y,int px,int py,int d){
@@ -149,19 +166,16 @@ void traverse(State& now){
 int main(){
     string tmp;
     cin >> tmp >> offset_x >> offset_y;
-    cin >> tmp >> h >> w;
+    cin >> tmp >> w >> h;
     cin >> tmp >> sx >> sy;
-    table.resize(h);
-    rep(i,h) cin >> table[i];
-    reverse(all(table));
 
-    int empty_num = 0;
-    rep(i,w){
-        rep(j,h){
-            if(table[i][j]!='#') empty_num++;
-        }
+    table = vector<vector<char>>(w,vector<char>(h));
+    {
+        vector<string> tmp(h);
+        rep(i,h) cin >> tmp[i];
+
+        rep(i,h) rep(j,w) table[j][h-1-i] = tmp[i][j];
     }
-
 
     deque<State> deq;
 
@@ -171,24 +185,43 @@ int main(){
     initial.y = sy;
     initial.arms = vector<pii>{pii(1,1),pii(1,0),pii(1,-1)};
     initial.visit[sx][sy] = true;
-    initial.value = empty_num-1;
+    for(pii p : initial.arms){
+        int x = initial.x + p.first;
+        int y = initial.y + p.second;
+        if(valid_index(x,y) && table[x][y] != '#'){
+            initial.visit[x][y] = true;
+        }
+    }
+    initial.value = 0;
+    for(int i=0;i<w;i++){
+        for(int j=0;j<h;j++){
+            if(table[i][j] != '#' && !initial.visit[i][j]) initial.value++;
+        }
+    }
     deq.push_front(initial);
 
     State now(initial);
 
     int turn = 0;
     // あんまりturn数を多くしても無駄が生じるのでパラメータを上手く定める関数が必要
-    while(++turn < h*w/2){
+    while(++turn < h*w*10){
+        /* cerr << endl; */
+        /* cerr << "turn = " << turn << endl; */
+        /* cerr << table[now.x][now.y] << endl; */
+        deq.clear();
+        deq.push_back(now);
         for(int i=0;i<DEPTH;i++){
             deque<State> next_deq;
             while(!deq.empty()){
                 State curr = deq.front();
+                next_deq.push_back(curr);
                 deq.pop_front();
 
                 // 4方向へ移動{{{
                 for(int k=0;k<4;k++){/*{{{*/
                     State next_state(curr);
                     if(!valid_index(curr.x+dx[k],curr.y+dy[k])) continue;
+                    if(table[curr.x+dx[k]][curr.y+dy[k]] == '#') continue;
                     update_move(next_state,dx[k],dy[k]);
 
                     if(k==0) next_state.actions.push_back(Action('D'));
@@ -215,16 +248,21 @@ int main(){
                     next_deq.push_back(nxt);
                 }/*}}}*/
 
-                sort(all(next_deq));
-                while(next_deq.size() > BEAM){
-                    next_deq.pop_back();
-                }
             }
+            sort(all(next_deq));
+            while(next_deq.size() > BEAM){
+                next_deq.pop_back();
+            }
+            /* cerr << "depth " << i << " -> " << next_deq.size() << endl; */
             deq = move(next_deq);
         }
 
         // この状態になることがあるかは考える必要がある
         if(deq.empty()){
+            break;
+        }
+
+        if(deq[0].value == now.value){
             break;
         }
 
@@ -242,9 +280,7 @@ int main(){
         }
         else if(deq[0].actions[0].action == 'D'){
             cout << 'D';
-            cerr << now.x << " " << now.y << endl;
             update_move(now,1,0);
-            cerr << now.x << " " << now.y << endl;
         }
         else if(deq[0].actions[0].action == 'B'){
             cout << "B(" << deq[0].actions[0].x << "," << deq[0].actions[0].y << ")";
@@ -257,14 +293,11 @@ int main(){
         }
 
         now.actions.clear();
-        cerr << "----- now ----- " << turn << endl;
-        cerr << now.x << " " << now.y << endl;
-        return 0;
     }
 
-    cerr << "Finish Beam Search" << endl;
-    //return 1;
 
+    cerr << "\nFinish Beam" << endl;
+    return 0;
 
     // 残りはDFSで探索しきる
     dist = vector<vector<P>>(w,vector<P>(w,P(INF,pii(-1,-1))));
