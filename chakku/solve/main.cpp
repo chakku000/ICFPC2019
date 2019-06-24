@@ -3,8 +3,6 @@
 using namespace std;
 
 
-
-
 void update_move(State& state, int dx,int dy){/*{{{*/
     if(table[state.x+dx][state.y+dy] == '#'){
         print(state);
@@ -22,20 +20,6 @@ void update_move(State& state, int dx,int dy){/*{{{*/
     int cnt = 0; // 到達になる場所の個数
 
     state.touch();
-    // bodyの通過
-    //if(!state.visit[state.x][state.y]) cnt++;
-    //if(table[state.x][state.y] == 'B') state.arm++;
-    //if(table[state.x][state.y] == 'F') state.wheel++;
-    //state.visit[state.x][state.y] = true;
-
-    //// 手が届く範囲
-    //for(const auto& p : state.arms){
-    //    int x = state.x + p.first;
-    //    int y = state.y + p.second;
-    //    if(x<0 or y<0 or x>=w or y>=h) continue;
-    //    if(table[x][y]!='#' and !state.visit[x][y]) cnt++;
-    //    state.visit[x][y] = true;
-    //}
 
     // 倍速移動中
     if(state.wheelturn>0){
@@ -43,20 +27,6 @@ void update_move(State& state, int dx,int dy){/*{{{*/
             state.x += dx;
             state.y += dy;
             state.touch();
-            // bodyの通過
-            //if(!state.visit[state.x][state.y]) cnt++;
-            //if(table[state.x][state.y] == 'B') state.arm++;
-            //if(table[state.x][state.y] == 'F') state.wheel++;
-            //state.visit[state.x][state.y] = true;
-
-            //// 手が届く範囲
-            //for(const auto& p : state.arms){
-            //    int x = state.x + p.first;
-            //    int y = state.y + p.second;
-            //    if(x<0 or y<0 or x>=w or y>=h) continue;
-            //    if(table[x][y]!='#' and !state.visit[x][y]) cnt++;
-            //    state.visit[x][y] = true;
-            //}
         }
         state.wheelturn--;
     }
@@ -122,6 +92,95 @@ int get_arm(State& now,int limit = INF){
     return 0;
 }
 
+void beam_search(State& state,int loop,const int BEAM,const int DEPTH,bool use_wheel=true){
+    deque<State> deq;
+
+    while(--loop){
+        deq.clear();
+        deq.push_back(state);
+        for(int i=0;i<DEPTH;i++){
+            deque<State> next_deq;
+            while(!deq.empty()){
+                State curr = deq.front();
+                next_deq.push_back(curr);
+                deq.pop_front();
+
+                // 4方向へ移動{{{
+                for(int k=0;k<4;k++){/*{{{*/
+                    State next_state(curr);
+                    if(!valid_index(curr.x+dx[k],curr.y+dy[k])) continue;
+                    if(table[curr.x+dx[k]][curr.y+dy[k]] == '#') continue;
+                    update_move(next_state,dx[k],dy[k]);
+
+                    if(k==0) next_state.actions.push_back(Action('D'));
+                    if(k==1) next_state.actions.push_back(Action('W'));
+                    if(k==2) next_state.actions.push_back(Action('A'));
+                    if(k==3) next_state.actions.push_back(Action('S'));
+                    next_deq.push_back(next_state);
+                }/*}}}*//*}}}*/
+
+                if(curr.arm>0 and curr.arms.size()<4){/*{{{*/
+                    State nxt(curr);
+                    nxt.arms.emplace_back(pii(-1,0));
+                    nxt.arm--;
+                    nxt.actions.push_back(Action('B',-1,0));
+                    next_deq.push_back(nxt);
+                }/*}}}*/
+
+                if(curr.wheel > 0 and use_wheel){/*{{{*/
+                    State nxt(curr);
+                    nxt.wheel--;
+                    nxt.wheelturn=50;
+                    nxt.actions.push_back(Action('F'));
+                    next_deq.push_back(nxt);
+                }/*}}}*/
+
+            }
+            sort(all(next_deq));
+            while(next_deq.size() > BEAM){
+                next_deq.pop_back();
+            }
+            deq = move(next_deq);
+        }
+
+        // この状態になることがあるかは考える必要がある
+        if(deq.empty()){ break; }
+        if(deq[0].value == state.value){ break; }
+
+        auto actions = deq[0].actions;
+        for(Action& act: actions){
+            if(act.action == 'W'){
+                cout << 'W';
+                update_move(state,0,1);
+            }
+            else if(act.action == 'S'){
+                cout << 'S';
+                update_move(state,0,-1);
+            }
+            else if(act.action == 'A'){
+                cout << 'A';
+                update_move(state,-1,0);
+            }
+            else if(act.action == 'D'){
+                cout << 'D';
+                update_move(state,1,0);
+            }
+            else if(act.action == 'B'){
+                pii arm =  state.add_arm();
+                cout << "B" << arm;
+                table[state.x][state.y] = '.';
+                state.touch();
+            }
+            else if(act.action == 'F'){
+                cout << "F";
+                state.wheel--;
+                state.wheelturn=50;
+            }
+        }
+        state.actions.clear();
+    }
+}
+
 int main(){
     string tmp;
     cin >> tmp >> offset_x >> offset_y;
@@ -159,7 +218,7 @@ int main(){
 
 
     // 近い場合は腕を取りに行く
-    while(get_arm(now,20) == 0){
+    while(get_arm(now,40) == 0){
         // 腕を生やす
         pii arm = now.add_arm();
         //cerr << "check1: " << now.x << " " << now.y << endl;
@@ -168,102 +227,7 @@ int main(){
 
 
     // ビームサーチ
-    deque<State> deq;
-    deq.push_front(now);
-
-    int turn = 0;
-    // あんまりturn数を多くしても無駄が生じるのでパラメータを上手く定める関数が必要
-    while(++turn < h*w*2){
-        deq.clear();
-        deq.push_back(now);
-        for(int i=0;i<DEPTH;i++){
-            deque<State> next_deq;
-            while(!deq.empty()){
-                State curr = deq.front();
-                next_deq.push_back(curr);
-                deq.pop_front();
-
-                // 4方向へ移動{{{
-                for(int k=0;k<4;k++){/*{{{*/
-                    State next_state(curr);
-                    if(!valid_index(curr.x+dx[k],curr.y+dy[k])) continue;
-                    if(table[curr.x+dx[k]][curr.y+dy[k]] == '#') continue;
-                    update_move(next_state,dx[k],dy[k]);
-
-                    if(k==0) next_state.actions.push_back(Action('D'));
-                    if(k==1) next_state.actions.push_back(Action('W'));
-                    if(k==2) next_state.actions.push_back(Action('A'));
-                    if(k==3) next_state.actions.push_back(Action('S'));
-                    next_deq.push_back(next_state);
-                }/*}}}*//*}}}*/
-
-                if(curr.arm>0 and curr.arms.size()<4){/*{{{*/
-                    State nxt(curr);
-                    nxt.arms.emplace_back(pii(-1,0));
-                    nxt.arm--;
-                    nxt.actions.push_back(Action('B',-1,0));
-                    next_deq.push_back(nxt);
-                }/*}}}*/
-
-
-                if(curr.wheel > 0){/*{{{*/
-                    State nxt(curr);
-                    nxt.wheel--;
-                    nxt.wheelturn=50;
-                    nxt.actions.push_back(Action('F'));
-                    next_deq.push_back(nxt);
-                }/*}}}*/
-
-            }
-            sort(all(next_deq));
-            while(next_deq.size() > BEAM){
-                next_deq.pop_back();
-            }
-            deq = move(next_deq);
-        }
-
-        // この状態になることがあるかは考える必要がある
-        if(deq.empty()){
-            break;
-        }
-
-        if(deq[0].value == now.value){
-            break;
-        }
-
-        auto actions = deq[0].actions;
-        for(Action& act: actions){
-            if(act.action == 'W'){
-                cout << 'W';
-                update_move(now,0,1);
-            }
-            else if(act.action == 'S'){
-                cout << 'S';
-                update_move(now,0,-1);
-            }
-            else if(act.action == 'A'){
-                cout << 'A';
-                update_move(now,-1,0);
-            }
-            else if(act.action == 'D'){
-                cout << 'D';
-                update_move(now,1,0);
-            }
-            else if(act.action == 'B'){
-                pii arm =  now.add_arm();
-                cout << "B" << arm;
-                table[now.x][now.y] = '.';
-                now.touch();
-            }
-            else if(act.action == 'F'){
-                cout << "F";
-                now.wheel--;
-                now.wheelturn=50;
-            }
-        }
-        now.actions.clear();
-    }
-
+    beam_search(now,h*w,10,40);
 
     /* cerr << "\nFinish Beam" << endl; */
 
@@ -298,12 +262,6 @@ int main(){
 
         vector<char> vc;
         if(p.first == -1 and p.second == -1){
-            /* cerr << endl << "Error" << endl; */
-            /* int err = 0; */
-            /* rep(i,w) rep(j,h){ */
-            /*     if(table[i][j]!='#' && !now.visit[i][j]) err++; */
-            /* } */
-            /* cerr << err << endl; */
             return 0;
         }
         while(p != dist[p.first][p.second].second){
@@ -321,11 +279,9 @@ int main(){
             if(vc[i] == 'A') update_move(now,-1,0);
             if(vc[i] == 'S') update_move(now,0,-1);
         }
-    }
 
-    /* int err = 0; */
-    /* rep(i,w) rep(j,h){ */
-    /*     if(table[i][j]!='#' && !now.visit[i][j]) err++; */
-    /* } */
-    /* cerr << err << endl; */
+
+        // 到達地点からビームサーチを開始してみる
+        beam_search(now,50,5,100,false);
+    }
 }

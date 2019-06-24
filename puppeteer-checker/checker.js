@@ -64,7 +64,9 @@ if (program.file) {
         //console.log(result);
         if(result.indexOf("Success") === 0){
             let cost = result.replace(/[^0-9]/g,'');
-            console.log("OK",cost);
+            console.log(`OK ${taskFile}`,cost);
+        }else{
+            console.log(`NG ${taskFile}`,100000);
         }
         //console.log(`${taskFile}: ${result}`);
     }

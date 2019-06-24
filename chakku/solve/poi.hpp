@@ -31,8 +31,8 @@ int w,h;
 int sx,sy;
 vector<vector<char>> table;
 
-constexpr int BEAM = 8;
-constexpr int DEPTH = 30;
+//constexpr int BEAM = 8;
+//constexpr int DEPTH = 30;
 
 
 char direction(const pii& p1,const pii& p2){
