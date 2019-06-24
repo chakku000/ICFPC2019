@@ -30,11 +30,11 @@ CP = [[0]*(X+1) for i in range(Y+1)]
 XV = []
 ci = 0
 xi = 0
-W = [[0]*(X+1) for i in range(Y+1)]
+W = [[1]*(X+1) for i in range(Y+1)]
 for i in range(Y+1):
     for j in range(X+1):
-        if MP[i][j] == 1:
-            W[i][j] = 1
+        if MP[i][j] == 0:
+            W[i][j] = 0
 #print(B)
 for code, x, y in B:
     ITEM[y][x] = code
@@ -206,6 +206,12 @@ for i in range(ci+1):
             res.append((x, y, 1))
         else:
             res.append((x, y, 0))
+        # だいたい改善する (悪化する場合もある)
+        # 部屋の左上に塗られていないマスを放置してしまう挙動をするため、これに対応するもの
+        if MP[y][x-1] == 1 and MP[y+1][x] == 0 and W[y+1][x] == 0 and MP[y+2][x] == 1 and MP[y+2][x+1] == 1 and MP[y+1][x-1] == 1:
+            res.append((x, y+1, 1))
+            res.append((x, y, 0))
+            W[y+1][x] = 1
         W[y][x] = W[y][x+1] = W[y-1][x+1] = W[y+1][x+1] = 1
         cnt -= 1
         for i in orders[y][x]:
@@ -220,7 +226,7 @@ for i in range(ci+1):
     res0 = []
     cx = x; cy = y
     for x, y, m in res:
-        assert mmp[y][x] == j
+        #assert mmp[y][x] == j
         if m:
             if not md:
                 ps = util.move(MP, X, Y, cx, cy, x, y)
