@@ -231,32 +231,36 @@ int main(){
             break;
         }
 
-        if(deq[0].actions[0].action == 'W'){
-            cout << 'W';
-            update_move(now,0,1);
+        auto actions = deq[0].actions;
+        for(Action& act: actions){
+            if(act.action == 'W'){
+                cout << 'W';
+                update_move(now,0,1);
+            }
+            else if(act.action == 'S'){
+                cout << 'S';
+                update_move(now,0,-1);
+            }
+            else if(act.action == 'A'){
+                cout << 'A';
+                update_move(now,-1,0);
+            }
+            else if(act.action == 'D'){
+                cout << 'D';
+                update_move(now,1,0);
+            }
+            else if(act.action == 'B'){
+                pii arm =  now.add_arm();
+                cout << "B" << arm;
+                table[now.x][now.y] = '.';
+                now.touch();
+            }
+            else if(act.action == 'F'){
+                cout << "F";
+                now.wheel--;
+                now.wheelturn=50;
+            }
         }
-        else if(deq[0].actions[0].action == 'S'){
-            cout << 'S';
-            update_move(now,0,-1);
-        }
-        else if(deq[0].actions[0].action == 'A'){
-            cout << 'A';
-            update_move(now,-1,0);
-        }
-        else if(deq[0].actions[0].action == 'D'){
-            cout << 'D';
-            update_move(now,1,0);
-        }
-        else if(deq[0].actions[0].action == 'B'){
-            cout << "B(" << deq[0].actions[0].x << "," << deq[0].actions[0].y << ")";
-            now.arms.push_back(pii(deq[0].actions[0].x,deq[0].actions[0].y));
-        }
-        else if(deq[0].actions[0].action == 'F'){
-            cout << "F";
-            now.wheel--;
-            now.wheelturn=50;
-        }
-
         now.actions.clear();
     }
 
@@ -294,12 +298,12 @@ int main(){
 
         vector<char> vc;
         if(p.first == -1 and p.second == -1){
-            cerr << endl << "Error" << endl;
-            int err = 0;
-            rep(i,w) rep(j,h){
-                if(table[i][j]!='#' && !now.visit[i][j]) err++;
-            }
-            cerr << err << endl;
+            /* cerr << endl << "Error" << endl; */
+            /* int err = 0; */
+            /* rep(i,w) rep(j,h){ */
+            /*     if(table[i][j]!='#' && !now.visit[i][j]) err++; */
+            /* } */
+            /* cerr << err << endl; */
             return 0;
         }
         while(p != dist[p.first][p.second].second){
@@ -319,9 +323,9 @@ int main(){
         }
     }
 
-    int err = 0;
-    rep(i,w) rep(j,h){
-        if(table[i][j]!='#' && !now.visit[i][j]) err++;
-    }
-    cerr << err << endl;
+    /* int err = 0; */
+    /* rep(i,w) rep(j,h){ */
+    /*     if(table[i][j]!='#' && !now.visit[i][j]) err++; */
+    /* } */
+    /* cerr << err << endl; */
 }

@@ -1,7 +1,11 @@
 #ifndef __POI__
 #define __POI__
 
-#include <bits/stdc++.h>
+#include <vector>
+#include <utility>
+#include <set>
+#include <algorithm>
+#include <map>
 using namespace std;
 
 
