@@ -10,6 +10,7 @@ program
 
 program.parse(process.argv);
 
+
 targets = []
 
 if (program.file) {
@@ -36,7 +37,6 @@ if (program.file) {
     }
 }
 
-// console.log(targets);
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false });
@@ -48,18 +48,25 @@ if (program.file) {
     let submit = await page.$('#execute_solution');
     let output = await page.$('#output');
 
+
     for (let [taskFile, solutionFile] of targets) {
         await task.uploadFile(taskFile);
-        await page.waitForFunction('document.getElementById("output").innerHTML != "Uploading solution file..."');
+        await page.waitForFunction('document.getElementById("output").innerHTML == "Done uploading task description"');
 
         await solution.uploadFile(solutionFile);
-        await page.waitForFunction('document.getElementById("output").innerHTML != "Uploading task description..."');
+        await page.waitForFunction('document.getElementById("output").innerHTML == "Done uploading solution"');
 
         await submit.click();
         await page.waitForFunction('document.getElementById("output").innerHTML != "Pre-processing and validating the task..."');
 
         let result = (await page.evaluate(el => el.innerHTML, output)).replace(/\n/g, '');
-        console.log(`${taskFile}: ${result}`);
+
+        //console.log(result);
+        if(result.indexOf("Success") === 0){
+            let cost = result.replace(/[^0-9]/g,'');
+            console.log("OK",cost);
+        }
+        //console.log(`${taskFile}: ${result}`);
     }
 
     await browser.close();
